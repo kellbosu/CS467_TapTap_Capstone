@@ -19,37 +19,44 @@ public class NoteHandler : MonoBehaviour
     }
 
     void Update()
+{
+    if (Input.GetMouseButtonDown(0) && !isCorrectClicked)
     {
-        if (Input.GetMouseButtonDown(0) && !isCorrectClicked)
+        Vector3 clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        clickPosition.z = 0;
+
+        Collider2D col = Physics2D.OverlapPoint(clickPosition);
+
+        if (col != null && col.CompareTag("note"))
         {
-            Vector3 clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            clickPosition.z = 0;  
+            float distance = Vector2.Distance(transform.position, targetCircle.position);
+            float perfectRange = circleRange * 0.2f;
+            float goodRange = circleRange * 0.5f;
 
-            Collider2D col = Physics2D.OverlapPoint(clickPosition);
-
-            if (col != null && col.CompareTag("note"))
+            if (distance <= perfectRange)
             {
-                float distance = Vector2.Distance(transform.position, targetCircle.position);
-
-                if (distance <= circleRange * triggerRange)
-                {
-                    isCorrectClicked = true;
-                    int percentage = (int)(triggerRange * 100);
-                    Debug.Log($"✅ Clicked note inside {percentage}% of target!");
-
-                    //GetComponent<Animator>().enabled = false;
-                    GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-                    Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
-                    noteAnimator.SetBool("isDisappear", true); 
-                    noteBoomVfx.SetActive(true);                
-
-                }
-                else
-                {
-                    int percentage = (int)(triggerRange * 100);
-                    Debug.Log($"❌ Clicked note but outside {percentage}% area, destroy after 5s.");
-                }
+                Debug.Log("🎯 Perfect!");
+                TriggerNote();
+            }
+            else if (distance <= goodRange)
+            {
+                Debug.Log("👍 Good!");
+                TriggerNote();
+            }
+            else
+            {
+                Debug.Log("❌ Miss!");
             }
         }
     }
+}
+
+void TriggerNote()
+{
+    isCorrectClicked = true;
+    GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+    Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
+    noteAnimator.SetBool("isDisappear", true);
+    noteBoomVfx.SetActive(true);
+}
 }
