@@ -7,7 +7,7 @@ import os
 # run visualizer by installing pygame and running
 # python 3 visualizer.py [JSON FILE] [MP3 FILE]
 
-SCREEN_WIDTH = 600
+SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 200
 CIRCLE_RADIUS = 40
 TAP_LINGER_MS = 150  
