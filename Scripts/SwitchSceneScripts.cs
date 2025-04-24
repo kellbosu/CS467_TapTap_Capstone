@@ -7,7 +7,7 @@ public class SwitchSceneScripts : MonoBehaviour
 {
     public void LoadScene3Rail()
     {
-        SceneManager.LoadScene(2);
+        SceneManager.LoadScene(4);
     }
 
     public void LoadScene4Rail()
