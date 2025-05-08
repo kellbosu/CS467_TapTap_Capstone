@@ -24,6 +24,17 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    void Start()
+    {
+        Time.timeScale = 1f;
+    }
+
+    public void WaitingGame()
+    {
+        currentGameState = "Waiting";
+        isFeverMode = false;
+        Debug.Log("Game Waiting");
+    }
 
     public void StartGame()
     {
@@ -59,13 +70,16 @@ public class GameManager : MonoBehaviour
     }
     public void RestartGame()
     {
+        Time.timeScale = 1f;
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(currentSceneName);
+        StartGame();
         Debug.Log("Game Restarted");
     }
     public void LoadMainMenu()
     {
         SceneManager.LoadScene(0);
+        WaitingGame();
         Debug.Log("Load Main Menu");
     }
 }
