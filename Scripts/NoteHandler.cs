@@ -1,11 +1,13 @@
-usinusing System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// Handles note falling and click detection in rhythm game.
 public class NoteHandler : MonoBehaviour
 {
-    public Transform targetCircle;
-    private float circleRange;
+
+    public Transform targetCircle;    
+    private float circleRange;    
     public float triggerRange;
     private bool isCorrectClicked = false;
     private bool hasBeenClicked = false;
@@ -20,7 +22,8 @@ public class NoteHandler : MonoBehaviour
         // More forgiving on the player and makes more fun
         
     }
-
+    
+    /// Checks for mouse click, validates hit, and triggers animation/VFX.
     void Update()
     {
         if (Input.GetMouseButtonDown(0) && !isCorrectClicked)
