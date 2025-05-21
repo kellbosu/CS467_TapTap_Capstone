@@ -7,10 +7,8 @@ public class ComboManager : MonoBehaviour
 
     private int totalComboCount = 0;
     private int recoveryComboCount = 0;
+    private int postMissHitStreak = 0;
     private bool isInMissState = false;
-
-    public int comboForFever = 10;   // Combo needed to trigger fever
-    public int recoveryNeeded = 3;   // Hits needed to recover after a miss
 
     public void RegisterPerfect()
     {
@@ -28,19 +26,17 @@ public class ComboManager : MonoBehaviour
     {
         Debug.Log("Miss");
 
+        
         if (yaySprite.activeSelf)
         {
             yaySprite.SetActive(false);
-            missSprite.SetActive(true);
-            isInMissState = true;
-            recoveryComboCount = 0;
-
-            // Exit Fever Mode
-            if (GameManager.Instance.isFeverMode)
-            {
-                GameManager.Instance.DeactivateFeverMode();
-            }
         }
+
+        missSprite.SetActive(true);
+        isInMissState = true;
+        recoveryComboCount = 0;
+        postMissHitStreak = 0;
+        totalComboCount = 0;
     }
 
     private void HandleHit()
@@ -50,21 +46,23 @@ public class ComboManager : MonoBehaviour
         if (isInMissState)
         {
             recoveryComboCount++;
+            postMissHitStreak++;
 
-            if (recoveryComboCount >= recoveryNeeded)
+            if (recoveryComboCount >= 3)
             {
                 missSprite.SetActive(false);
                 isInMissState = false;
             }
         }
-
-        // Trigger Fever Mode
-        if (!GameManager.Instance.isFeverMode &&
-            !isInMissState &&
-            totalComboCount >= comboForFever)
+        else
         {
-            GameManager.Instance.ActivateFeverMode();
-            yaySprite.SetActive(true); 
+            postMissHitStreak++;
+        }
+
+        
+        if (!yaySprite.activeSelf && !isInMissState && postMissHitStreak >= 10)
+        {
+            yaySprite.SetActive(true);
         }
     }
 }
