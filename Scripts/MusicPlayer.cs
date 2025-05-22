@@ -8,6 +8,7 @@ public class MusicPlayer : MonoBehaviour
     private AudioSource audioSource;
     private float musicStartTime;
     private bool isMusicPlaying = false;
+    private bool hasStartedOnce = false;
 
     public int MusicElapsedMilliseconds => isMusicPlaying ? (int)((Time.time - musicStartTime) * 1000) : 0;
 
@@ -32,7 +33,14 @@ public class MusicPlayer : MonoBehaviour
     {
         if (!isMusicPlaying && audioSource.clip != null)
         {
-            StartCoroutine(CountdownAndPlay());
+            if (!hasStartedOnce)
+            {
+                StartCoroutine(CountdownAndPlay());
+            }
+            else
+            {
+                ResumeMusic();
+            }
         }
     }
 
@@ -43,6 +51,7 @@ public class MusicPlayer : MonoBehaviour
         audioSource.Play();
         musicStartTime = Time.time;
         isMusicPlaying = true;
+        hasStartedOnce = true;
     }
 
     public void StopMusic()
@@ -68,9 +77,7 @@ public class MusicPlayer : MonoBehaviour
     {
         if (isMusicPlaying && !audioSource.isPlaying)
         {
-            audioSource.UnPause(); 
+            audioSource.UnPause();
         }
     }
-
 }
-
