@@ -9,10 +9,10 @@ public class SceneSwitchManager : MonoBehaviour
     // Loads the scene with index 4
     public void LoadScene3Rail()
     {
-        Debug.Log("Attempting to load 3-Rail scene (index 4)...");
+        Debug.Log("Attempting to load 3-Rail scene (index 2)...");
         Time.timeScale = 1f;
         GameManager.Instance.StartGame();
-        SceneManager.LoadScene(4);
+        SceneManager.LoadScene(2);
     }
 
     // Loads the scene with index 3

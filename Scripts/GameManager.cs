@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     //Playing
     //Paused
     public string currentGameState = "Waiting";
+    public AudioSource musicSource; 
 
     public bool isFeverMode = false;
 
@@ -41,18 +42,14 @@ public class GameManager : MonoBehaviour
         currentGameState = "Playing";
         isFeverMode = false;
         Debug.Log("Game Started");
-
-        MusicPlayer.Instance.PlayMusicWithCountdown();
     }
-
     public void PauseGame()
     {
-        currentGameState = "Paused";
+                if (musicSource.isPlaying)
+            musicSource.Pause();
+        
         Time.timeScale = 0;
-        if (MusicPlayer.Instance != null && MusicPlayer.Instance.IsMusicPlaying())
-        {
-            MusicPlayer.Instance.PauseMusic();
-        }
+currentGameState = "Paused";
         Debug.Log("Game Paused");
     }
 
@@ -60,12 +57,7 @@ public class GameManager : MonoBehaviour
     {
         currentGameState = "Playing";
         Time.timeScale = 1;
-
-        if (MusicPlayer.Instance != null && !MusicPlayer.Instance.IsMusicPlaying())
-        {
-            MusicPlayer.Instance.ResumeMusic();
-        }
-
+        musicSource.UnPause();
         Debug.Log("Game Resumed");
     }
 
