@@ -11,7 +11,7 @@ public class NoteSpawner : MonoBehaviour
     {
         if (notePrefab == null)
         {
-            Debug.LogError("NotePrefab is not assigned.");
+            //Debug.LogError("NotePrefab is not assigned.");
             return;
         }
         StartCoroutine(SpawnNotes());
@@ -22,7 +22,7 @@ public class NoteSpawner : MonoBehaviour
         while (true)
         {
             Instantiate(notePrefab, transform.position, Quaternion.identity);
-            Debug.Log("Note spawned at: " + transform.position);
+            //Debug.Log("Note spawned at: " + transform.position);
             yield return new WaitForSeconds(spawnInterval);
         }
     }
