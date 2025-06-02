@@ -1,16 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
     public bool musicFinished = false;
     public GameObject resultEvent;
     public GameObject pauseEvent;
+    public TMP_Text finalResultText;
+    private ComboManager comboManager;
     // Start is called before the first frame update
     void Start()
     {
-        
+        comboManager = FindObjectOfType<ComboManager>();
     }
 
     // Update is called once per frame
@@ -44,6 +47,10 @@ public class UIManager : MonoBehaviour
     }
     void ResultEvent()
     {
+        string finalScore = comboManager.totalScoreText.text; 
+        int maxHit = comboManager.maxHit;
+
+        finalResultText.text = $"Final Score:\n{finalScore}\n\nMax Hit:\n{maxHit}";
         resultEvent.SetActive(true);
     }
 }
