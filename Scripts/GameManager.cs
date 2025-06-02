@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     //Playing
     //Paused
     public string currentGameState = "Waiting";
-    public AudioSource musicSource; 
+    //public AudioSource musicSource; 
 
     public bool isFeverMode = false;
 
@@ -41,25 +41,39 @@ public class GameManager : MonoBehaviour
     {
         currentGameState = "Playing";
         isFeverMode = false;
+        AudioManager.Instance.PlayMusic();
         Debug.Log("Game Started");
     }
-    public void PauseGame()
-    {
-                if (musicSource.isPlaying)
-            musicSource.Pause();
+//     public void PauseGame()
+//     {
+//                 if (musicSource.isPlaying)
+//             musicSource.Pause();
         
-        Time.timeScale = 0;
-currentGameState = "Paused";
-        Debug.Log("Game Paused");
-    }
+//         Time.timeScale = 0;
+// currentGameState = "Paused";
+//         Debug.Log("Game Paused");
+//     }
 
-    public void ResumeGame()
-    {
-        currentGameState = "Playing";
-        Time.timeScale = 1;
-        musicSource.UnPause();
-        Debug.Log("Game Resumed");
-    }
+//     public void ResumeGame()
+//     {
+//         currentGameState = "Playing";
+//         Time.timeScale = 1;
+//         musicSource.UnPause();
+//         Debug.Log("Game Resumed");
+//     }
+public void PauseGame()
+{
+    AudioManager.Instance.PauseMusic();
+    Time.timeScale = 0;
+    currentGameState = "Paused";
+}
+
+public void ResumeGame()
+{
+    Time.timeScale = 1;
+    currentGameState = "Playing";
+    AudioManager.Instance.ResumeMusic();
+}
 
     public void ActivateFeverMode()
     {
@@ -75,6 +89,10 @@ currentGameState = "Paused";
     public void RestartGame()
     {
         Time.timeScale = 1f;
+        if (AudioManager.Instance != null)
+        {
+            Destroy(AudioManager.Instance.gameObject);
+        }
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(currentSceneName);
         StartGame();
@@ -83,6 +101,10 @@ currentGameState = "Paused";
     public void LoadMainMenu()
     {
         SceneManager.LoadScene(0);
+        if (AudioManager.Instance != null)
+        {
+            Destroy(AudioManager.Instance.gameObject);
+        }
         WaitingGame();
         Debug.Log("Load Main Menu");
     }
