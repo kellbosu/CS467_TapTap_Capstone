@@ -1,120 +1,65 @@
-// using System.Collections;
-// using System.Collections.Generic;
-// using UnityEngine;
-
-// /// Handles note falling and click detection in rhythm game.
-// public class NoteHandler : MonoBehaviour
-// {
-//     public Transform targetCircle;    
-//     private float circleRange;    
-//     public float triggerRange;
-//     private bool isCorrectClicked;
-//     public GameObject noteBoomVfx;
-//     public float noteSpeed = 0.2f;
-//     ComboManager comboManager;
-//     void Start()
-//     {
-//         comboManager = FindObjectOfType<ComboManager>();
-
-//         GetComponent<Rigidbody2D>().velocity = Vector2.down * noteSpeed;
-//         circleRange = GetComponent<CircleCollider2D>().radius * transform.localScale.x;
-//         Destroy(gameObject, 10f);
-//     }
-    
-//     /// Checks for mouse click, validates hit, and triggers animation/VFX.
-//     void Update()
-//     {
-//         // Detect left-click and ensure the note hasn't already been clicked
-//         if (Input.GetMouseButtonDown(0) && !isCorrectClicked)
-//         {
-//             Vector3 clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-//             clickPosition.z = 0;  
-
-//             Collider2D col = Physics2D.OverlapPoint(clickPosition);
-
-//             // Check if click is within valid trigger range
-//             if (col != null && col.CompareTag("note"))
-//             {   
-//                 // Measure distance from note to target circle
-//                 float distance = Vector2.Distance(transform.position, targetCircle.position);
-
-//                 if (distance <= circleRange * triggerRange)
-//                 {
-//                     comboManager.RegisterGood();
-//                     isCorrectClicked = true;
-//                     int percentage = (int)(triggerRange * 100);
-
-//                     GetComponent<Rigidbody2D>().velocity = Vector2.zero;  // Stop the note from moving
-//                     Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
-//                     noteAnimator.SetBool("isDisappear", true); // Trigger disappear animation
-//                     noteBoomVfx.SetActive(true); // Activate boom visual effect               
-
-//                 }
-//                 else
-//                 {
-//                     comboManager.RegisterMiss();
-//                     int percentage = (int)(triggerRange * 100);
-//                 }
-//             }else{
-//                 comboManager.RegisterMiss();
-//             }
-//         }
-//     }
-// }
-
-using UnityEngine;
 using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
+// Handles individual note behavior: click/key detection, hit judgment, combo update,
+// feedback UI display, and automatic miss detection based on timing window.
 public class NoteHandler : MonoBehaviour
 {
-    public Transform targetCircle;    
+    public Transform targetCircle;
 
-    
-
-    //public AudioSource sfxSource;
+    // ---------- Audio Clips for Judgment Feedback ----------
     public AudioClip perfectSfx;
     public AudioClip goodSfx;
     public AudioClip fineSfx;
 
-    public float perfectWindowMs = 50f;  
+    // ---------- Timing Windows for Judgment----------
+    public float perfectWindowMs = 50f;
     public float goodWindowMs = 100f;
     public float fineWindowMs = 150f;
 
+    // ---------- UI Elements for Hit Feedback ----------
     public GameObject missUIPrefab;
     public GameObject perfectUI;
     public GameObject goodUI;
     public GameObject fineUI;
-
 
     public GameObject noteBoomVfx;
 
     private bool isCorrectClicked = false;
     private ComboManager comboManager;
 
-    [HideInInspector] public double targetTimeMs; 
-    [HideInInspector] public int column;  
+    [HideInInspector]
+    public double targetTimeMs; // Absolute target hit time
+
+    [HideInInspector]
+    public int column; // Column this note belongs to
 
     private Transform missUIParent;
 
+    // Initialization: locate ComboManager, assign correct canvas for miss UI display.
     void Start()
     {
         comboManager = FindObjectOfType<ComboManager>();
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
-        if(sceneIndex == 2)
+
+        // Assign different canvas for 3-rail or 4-rail mode
+        if (sceneIndex == 2)
         {
             missUIParent = GameObject.Find("Canvas").transform;
-        }else if(sceneIndex == 3)
+        }
+        else if (sceneIndex == 3)
         {
             missUIParent = GameObject.Find("CanvasFourRail").transform;
         }
-        //AudioSource sfxSource = GameObject.Find("sfxSource").GetComponent<AudioSource>();
-        Destroy(gameObject, 10f);
+
+        Destroy(gameObject, 10f); // Auto destroy note after lifetime
     }
 
+    // Main loop to detect miss, player inputs, and handle hit logic.
     void Update()
     {
+        // Handle auto-miss if note passes its judgment window
         if (!isCorrectClicked)
         {
             double currentTimeMs = AudioManager.Instance.GetDspTimeInMs();
@@ -124,131 +69,133 @@ public class NoteHandler : MonoBehaviour
             {
                 isCorrectClicked = true;
                 comboManager.RegisterMiss();
-               
-                
-                MissUI();
 
+                MissUI();
             }
         }
 
-//------------------------------for mobile ---------------------      
+        //--------------------------------- For mobile input (tap) ---------------------------------
         if (Input.GetMouseButtonDown(0) && !isCorrectClicked)
         {
+            // Convert screen click position to world coordinates
             Vector3 clickPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             clickPosition.z = 0;
 
+            // Check if the click overlaps with this note's collider
             Collider2D col = Physics2D.OverlapPoint(clickPosition);
 
             if (col != null && col.gameObject == gameObject)
             {
-                // float currentTimeMs = musicSource.time * 1000f;
-                // float delta = Mathf.Abs(currentTimeMs - targetTimeMs);
                 double currentTimeMs = AudioManager.Instance.GetDspTimeInMs();
                 double delta = Mathf.Abs((float)(currentTimeMs - targetTimeMs));
 
-                
-
+                // Handle valid hit
                 if (delta <= fineWindowMs)
                 {
                     isCorrectClicked = true;
                     comboManager.RegisterHit();
-                    //Debug.Log($"Clicked within {delta}ms of target time!");
                     Judge(delta);
-
-                    Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
-                    noteAnimator.SetBool("isDisappear", true);
-                    noteBoomVfx.SetActive(true);
+                    TriggerNoteDisappear();
                 }
                 else
                 {
+                    // Handle auto miss
                     comboManager.RegisterMiss();
                     MissUI();
-                    Debug.Log($"Auto Miss! currentTime = {currentTimeMs}, targetTime = {targetTimeMs}");
+                    Debug.Log(
+                        $"Auto Miss! currentTime = {currentTimeMs}, targetTime = {targetTimeMs}"
+                    );
                 }
             }
         }
-//------------------------------for mobile ---------------------      
+        //--------------------------------- For mobile input ---------------------------------
 
-//------------------------------for win/mac ---------------------      
+        //--------------------------------- For desktop input (keyboard) ---------------------------------
         if (!isCorrectClicked && IsKeyForThisColumnPressed())
         {
             double currentTimeMs = AudioManager.Instance.GetDspTimeInMs();
             double delta = Math.Abs(currentTimeMs - targetTimeMs);
-            
-            //Judge(delta);
 
-
+            // If input is within judgment, register as hit
             if (delta <= fineWindowMs)
             {
                 isCorrectClicked = true;
                 comboManager.RegisterHit();
-                //Debug.Log($"Key press hit on column {column} within {delta}ms");
                 Judge(delta);
-
-                Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
-                noteAnimator.SetBool("isDisappear", true);
-                noteBoomVfx.SetActive(true);
+                TriggerNoteDisappear();
             }
         }
-//------------------------------for win/mac ---------------------      
-
-
+        //--------------------------------- For desktop input ---------------------------------
     }
-            private bool IsKeyForThisColumnPressed()
-        {
-            switch (column)
-            {
-                case 1: return Input.GetKeyDown(KeyCode.A);
-                case 2: return Input.GetKeyDown(KeyCode.S);
-                case 3: return Input.GetKeyDown(KeyCode.D);
-                case 4: return Input.GetKeyDown(KeyCode.F);
-                default: return false;
-            }
-        }
 
-        private void Judge(double delta)
+    // Detects which keyboard key belongs to which column.
+    private bool IsKeyForThisColumnPressed()
     {
+        switch (column)
+        {
+            case 1:
+                return Input.GetKeyDown(KeyCode.A);
+            case 2:
+                return Input.GetKeyDown(KeyCode.S);
+            case 3:
+                return Input.GetKeyDown(KeyCode.D);
+            case 4:
+                return Input.GetKeyDown(KeyCode.F);
+            default:
+                return false;
+        }
+    }
+
+    // Perform judgment based on hit delta.
+    private void Judge(double delta)
+    {
+        // Perfect judgment
         if (delta <= perfectWindowMs)
         {
             Vector3 position = Camera.main.transform.position;
-            AudioSource.PlayClipAtPoint(perfectSfx, position, 4.0f); 
-            //isCorrectClicked = true;
-            //comboManager.RegisterGood();  
-            //totalScore = totalScore + perfectScore;
+            AudioSource.PlayClipAtPoint(perfectSfx, position, 4.0f);
             comboManager.UpdatePerfect();
             Debug.Log($"Perfect! delta = {delta}ms");
             perfectUI.SetActive(true);
         }
+        // Good judgment
         else if (delta <= goodWindowMs)
         {
-            Vector3 position = Camera.main.transform.position; 
-            AudioSource.PlayClipAtPoint(goodSfx, position, 5.0f); 
-            //isCorrectClicked = true;
-            //comboManager.RegisterGood();
-            //totalScore = totalScore + goodScore;
+            Vector3 position = Camera.main.transform.position;
+            AudioSource.PlayClipAtPoint(goodSfx, position, 5.0f);
             comboManager.UpdateGood();
             Debug.Log($"Good! delta = {delta}ms");
             goodUI.SetActive(true);
         }
+        // Fine judgment
         else if (delta <= fineWindowMs)
         {
-            Vector3 position = Camera.main.transform.position; 
-            AudioSource.PlayClipAtPoint(fineSfx, position, 70.0f); 
-            //isCorrectClicked = true;
-            //comboManager.RegisterGood();
-            //totalScore = totalScore + fineScore;
+            Vector3 position = Camera.main.transform.position;
+            AudioSource.PlayClipAtPoint(fineSfx, position, 70.0f);
             comboManager.UpdateFine();
             Debug.Log($"Fine! delta = {delta}ms");
             fineUI.SetActive(true);
         }
-        
     }
+
+    // Play disappearance animation and activate VFX after successful hit.
+    private void TriggerNoteDisappear()
+    {
+        Animator noteAnimator = transform.GetChild(0).GetComponent<Animator>();
+        noteAnimator.SetBool("isDisappear", true);
+        noteBoomVfx.SetActive(true);
+    }
+
+    // Instantiate miss feedback UI at the correct lane position.
     private void MissUI()
     {
         Vector3 spawnPos = Vector3.zero;
 
+        // Get current scene index to determine which lane layout we're using
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
-        if(sceneIndex == 2)
+
+        // Determine spawn position for 3-Rail mode (scene index 2)
+        if (sceneIndex == 2)
         {
             if (column == 1)
                 spawnPos = new Vector3(-198f, -458f, 0f);
@@ -256,7 +203,9 @@ public class NoteHandler : MonoBehaviour
                 spawnPos = new Vector3(48f, -458f, 0f);
             else if (column == 3)
                 spawnPos = new Vector3(287f, -458f, 0f);
-        }else if(sceneIndex == 3)
+        }
+        // Determine spawn position for 4-Rail mode (scene index 3)
+        else if (sceneIndex == 3)
         {
             if (column == 1)
                 spawnPos = new Vector3(-235f, -458f, 0f);
@@ -267,11 +216,11 @@ public class NoteHandler : MonoBehaviour
             else if (column == 4)
                 spawnPos = new Vector3(330f, -458f, 0f);
         }
-
-
+        // Instantiate Miss UI prefab and position it at the calculated spawn position
         GameObject missUIInstance = Instantiate(missUIPrefab, missUIParent);
         missUIInstance.GetComponent<RectTransform>().localPosition = spawnPos;
+
+        // Auto-destroy the miss UI after 1 second
         Destroy(missUIInstance, 1.0f);
     }
-
 }

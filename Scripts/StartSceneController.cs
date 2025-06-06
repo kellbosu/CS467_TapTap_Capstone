@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// This script detects the first screen touch or mouse click
-/// and loads the next scene (Scene index 1).
+// StartSceneController handles detecting first player input on the start screen
+// and transitions into the main menu (Scene index 1).
+// Supports both mobile (touch) and desktop (mouse click).
 public class StartSceneController : MonoBehaviour
 {
     void Update()

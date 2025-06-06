@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// This script switches between the 3-Rail and 4-Rail game mode scenes.
+// SceneSwitchManager handles switching between the 3-Rail and 4-Rail game modes.
+// Triggered by menu UI button events.
 public class SceneSwitchManager : MonoBehaviour
 {
-    // Loads the scene with index 4
+    // Load the 3-Rail mode scene (Scene index 2).
     public void LoadScene3Rail()
     {
         Debug.Log("Attempting to load 3-Rail scene (index 2)...");
@@ -15,7 +16,7 @@ public class SceneSwitchManager : MonoBehaviour
         SceneManager.LoadScene(2);
     }
 
-    // Loads the scene with index 3
+    // Load the 4-Rail mode scene (Scene index 3).
     public void LoadScene4Rail()
     {
         Debug.Log("Attempting to load 4-Rail scene (index 3)...");
